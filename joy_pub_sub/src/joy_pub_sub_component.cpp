@@ -6,35 +6,114 @@
 #include <std_msgs/msg/int32.hpp>
 #include "../include/joy_pub_sub/joy_pub_sub_component.hpp"
 
-using namespace std::chrono_literals;
-int convertAnalogStick(float input, float a, float b);
+#define GEAR 20
+#define PERIMETER 0.628//周長[m]
+#define WHEEL_BASE 0.517//車輪間距離[m]
 
-geometry_msgs::msg::Twist diff_twist_msg;
+using namespace std::chrono_literals;
+
+float rpm_to_rad(float rpm);
+float rad_to_ms(float rad);
+float ms_calc(float rpm);
+
+geometry_msgs::msg::Twist diff_twist_r_msg;
+geometry_msgs::msg::Twist diff_twist_l_msg;
+
+geometry_msgs::msg::Twist viz_msg;
 
 void MinimalSubscriber::_topic_callback(const sensor_msgs::msg::Joy::SharedPtr msg){
 
-    if(msg->axes[4] > 0){//left
-    }
+    if(msg->axes[7] > 0){//forward
+      diff_twist_r_msg.linear.x =  300.0;
+      diff_twist_l_msg.linear.x = -300.0;
 
-    else if(msg->axes[4] < 0){//right
+      viz_msg.linear.x = 3;
+      viz_msg.linear.y = 3;
+      viz_msg.linear.z = 0;
+      viz_msg.angular.x = 0;
+      viz_msg.angular.y = 0;
+      viz_msg.angular.z = 0;
 
-    }
-
-    else if(msg->axes[5] > 0){//forward
-
-    }
-
-    else if(msg->axes[5] < 0){//back
-
-    }
-
-    else if(msg->buttons[2] == 1){//CW 2s approximately 45 degree
+      float i = 0;
+      i = ms_calc(300);
+      printf("FORMARD:%.2f[m/s]\n",i);
 
     }
 
+    else if(msg->axes[7] < 0){//back
+      diff_twist_r_msg.linear.x = -300;
+      diff_twist_l_msg.linear.x =  300;
 
-    else if(msg->buttons[0] == 1){//CCW strong 1s approximately 45 degree
+      viz_msg.linear.x = -1.5;
+      viz_msg.linear.y = -1.5;
+      viz_msg.linear.z = 0;
+      viz_msg.angular.x = 0;
+      viz_msg.angular.y = 0;
+      viz_msg.angular.z = 0;
 
+      float i = 0;
+      i = ms_calc(300);
+      printf("BACK:%.2f[m/s]\n",i);
+    }
+
+    else if(msg->axes[6] > 0){//left
+      // diff_twist_r_msg.linear.x = 300.0;
+      // diff_twist_l_msg.linear.x = 150.0;
+
+      // viz_msg.linear.x = 1;
+      // viz_msg.linear.y = 0.5;
+      // viz_msg.linear.z = 0;
+      // viz_msg.angular.x = 0;
+      // viz_msg.angular.y = 0;
+      // viz_msg.angular.z = -0.5;
+    }
+
+    else if(msg->axes[6] < 0){//right
+      // diff_twist_r_msg.linear.x = 150.0;
+      // diff_twist_l_msg.linear.x = 300.0;
+
+      // viz_msg.linear.x = 0.5;
+      // viz_msg.linear.y = 1.0;
+      // viz_msg.linear.z = 0;
+      // viz_msg.angular.x = 0;
+      // viz_msg.angular.y = 0;
+      // viz_msg.angular.z = 0.5;
+    }
+
+    else if(msg->buttons[1] == 1){//CW
+      diff_twist_r_msg.linear.x = -150.0;
+      diff_twist_l_msg.linear.x = -150.0;
+
+      viz_msg.linear.x = 0;
+      viz_msg.linear.y = 0;
+      viz_msg.linear.z = 0;
+      viz_msg.angular.x = 0;
+      viz_msg.angular.y = 0;
+      viz_msg.angular.z = 30;
+
+      float i = 0, v = 0, w = 0;
+      i = rpm_to_rad(150);
+      v = rad_to_ms(i);
+      w = 2 * v / WHEEL_BASE;
+      printf("CW:%.2f[rad/s]\n",w);
+    }
+
+    else if(msg->buttons[3] == 1){//CCW
+      diff_twist_r_msg.linear.x =  150.0;
+      diff_twist_l_msg.linear.x =  150.0;
+
+      viz_msg.linear.x = 0;
+      viz_msg.linear.y = 0;
+      viz_msg.linear.z = 0;
+      viz_msg.angular.x = 0;
+      viz_msg.angular.y = 0;
+      viz_msg.angular.z = -30;
+
+      float i = 0, v = 0, w = 0;
+      i = rpm_to_rad(150);
+      v = rad_to_ms(i);
+      w = 2 * v / WHEEL_BASE;
+      printf("CCW:%.2f[rad/s]\n",w);
     }
 
     else if(msg->buttons[3] == 1){
@@ -47,16 +126,19 @@ void MinimalSubscriber::_topic_callback(const sensor_msgs::msg::Joy::SharedPtr m
 
     else{
 
-      diff_twist_msg.linear.x = 0;
-      diff_twist_msg.linear.y = 0;
-      diff_twist_msg.linear.z = 0;
-      diff_twist_msg.angular.x = 0;
-      diff_twist_msg.angular.y = 0;
-      diff_twist_msg.angular.z = 0;
+      diff_twist_r_msg.linear.x = 0;
+      diff_twist_l_msg.linear.x = 0;
+
+      viz_msg.linear.x = 0;
+      viz_msg.linear.y = 0;
+      viz_msg.linear.z = 0;
+      viz_msg.angular.x = 0;
+      viz_msg.angular.y = 0;
+      viz_msg.angular.z = 0;
 
     }
 
-      printf("[cmd_vel] x: %f, y: %f, z: %f\n", diff_twist_msg.linear.x, diff_twist_msg.linear.y, diff_twist_msg.angular.z);
+      //printf("[cmd_vel] m/s motor0: %f[m/s], motor1: %f[m/s]\n", diff_twist_r_msg.linear.x, diff_twist_l_msg.linear.x);
 
 }
 
@@ -65,16 +147,22 @@ MinimalSubscriber::MinimalSubscriber(
 ): MinimalSubscriber("",options){}
 
 MinimalSubscriber::MinimalSubscriber(
-  const std::string& name_space, 
+  const std::string& name_space,
   const rclcpp::NodeOptions& options
 ): Node("minimal_subscriber_test", name_space, options){
 
-    diff_twist_publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("/cmd_vel_0",rclcpp::QoS(10));
+    diff_twist_r_publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("/cmd_vel_0", 10);
+    diff_twist_l_publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("/cmd_vel_1", 10);
+
+    viz_publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("/cmd_vel", 10);
 
     timer_ = this->create_wall_timer(
-    300ms,//Twistのパブリッシュ周波数
+    30ms,//Twistのパブリッシュ周波数
     [this](){
-        diff_twist_publisher_ ->publish(diff_twist_msg);
+        diff_twist_r_publisher_->publish(diff_twist_r_msg);
+        diff_twist_l_publisher_->publish(diff_twist_l_msg);
+
+        viz_publisher_->publish(viz_msg);
     }
     );
 
@@ -85,13 +173,38 @@ MinimalSubscriber::MinimalSubscriber(
   );
 
 //val Init
+  diff_twist_r_msg.linear.x = 0;
+  diff_twist_r_msg.linear.y = 0;
+  diff_twist_r_msg.linear.z = 0;
+  diff_twist_r_msg.angular.x = 0;
+  diff_twist_r_msg.angular.y = 0;
+  diff_twist_r_msg.angular.z = 0;
 
-  diff_twist_msg.linear.x = 0;
-  diff_twist_msg.linear.y = 0;
-  diff_twist_msg.linear.z = 0;
-  diff_twist_msg.angular.x = 0;
-  diff_twist_msg.angular.y = 0;
-  diff_twist_msg.angular.z = 0;
+  diff_twist_l_msg.linear.x = 0;
+  diff_twist_l_msg.linear.y = 0;
+  diff_twist_l_msg.linear.z = 0;
+  diff_twist_l_msg.angular.x = 0;
+  diff_twist_l_msg.angular.y = 0;
+  diff_twist_l_msg.angular.z = 0;
+
+  viz_msg.linear.x = 0;
+  viz_msg.linear.y = 0;
+  viz_msg.linear.z = 0;
+  viz_msg.angular.x = 0;
+  viz_msg.angular.y = 0;
+  viz_msg.angular.z = 0;
+
 
 }
 
+float rpm_to_rad(float rpm){
+    return rpm * ((2 * 3.14) / 60);
+  }
+
+float rad_to_ms(float rad){
+    return 0.1 * rad;
+  }
+
+float ms_calc(float rpm){
+  return ((rpm / GEAR) * PERIMETER) / 60;
+}

@@ -8,20 +8,12 @@
 
 class MinimalSubscriber : public rclcpp::Node{
 private:
+
   rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr _subscription;
-  rclcpp::Publisher<sensor_msgs::msg::Joy>::SharedPtr publisher_;
-  rclcpp::Publisher<sensor_msgs::msg::Joy>::SharedPtr screw_publisher_;
+  rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr diff_twist_r_publisher_;
+  rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr diff_twist_l_publisher_;
 
-  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr screw_test_publisher_;
-  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr screw_fr_publisher_;
-  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr screw_fl_publisher_;
-  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr screw_rr_publisher_;
-  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr screw_rl_publisher_;
-
-  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr ballast_up_publisher_;
-  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr ballast_dawn_publisher_;
-
-  rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr diff_twist_publisher_;
+  rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr viz_publisher_;
 
   rclcpp::TimerBase::SharedPtr timer_;
   void _topic_callback(const sensor_msgs::msg::Joy::SharedPtr msg);

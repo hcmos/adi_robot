@@ -18,8 +18,8 @@ class StatePublisher(Node):
         self.subscription  # prevent unused variable warning
         self.broadcaster = TransformBroadcaster(self)
 
-        self.declare_parameter('wheel_separation', 0.5)
-        self.declare_parameter('wheel_radius', 0.1)
+        self.declare_parameter('wheel_separation', 0.517)
+        self.declare_parameter('wheel_radius', 0.2)
 
         self.wheel_separation = self.get_parameter('wheel_separation').value
         self.wheel_radius = self.get_parameter('wheel_radius').value
@@ -32,41 +32,53 @@ class StatePublisher(Node):
         self.joint_state.position = [self.right_wheel_pos, self.left_wheel_pos]
 
 
+        self.x = 0.0
+        self.y = 0.0
+        self.th = 0.0
+
     def listener_callback(self, msg):
-        print('I heard: [%s]' % msg)
         linear_vel = msg.linear.x
         angular_vel = msg.angular.z
 
+        # Calculate the wheel velocities
         left_wheel_vel = (linear_vel - angular_vel * self.wheel_separation / 2.0) / self.wheel_radius
         right_wheel_vel = (linear_vel + angular_vel * self.wheel_separation / 2.0) / self.wheel_radius
 
-        self.left_wheel_pos += left_wheel_vel
-        self.right_wheel_pos += right_wheel_vel
+        # Update the wheel positions
+        dt = 0.1  # assuming a control loop running at 10Hz
+        self.left_wheel_pos += left_wheel_vel * dt
+        self.right_wheel_pos += right_wheel_vel * dt
 
         self.joint_state.header.stamp = self.get_clock().now().to_msg()
         self.joint_state.position = [self.left_wheel_pos, self.right_wheel_pos]
 
         self.publisher_.publish(self.joint_state)
 
+        # Update robot's position
+        dx = linear_vel * cos(self.th) * dt
+        dy = linear_vel * sin(self.th) * dt
+        dth = angular_vel * dt
+
+        self.x += dx
+        self.y += dy
+        self.th += dth
+
         transform = TransformStamped()
         transform.header.stamp = self.get_clock().now().to_msg()
         transform.header.frame_id = 'odom'
         transform.child_frame_id = 'base_link'
 
-        joint_state = JointState()
-        joint_state.header.stamp = self.get_clock().now().to_msg()
-        joint_state.name = ['drivewhl_r_joint', 'drivewhl_l_joint']
-        joint_state.position = [self.left_wheel_pos, self.right_wheel_pos]
-
-        transform.transform.translation.x = cos(self.left_wheel_pos) * 0.2  # Just an example, update accordingly
-        transform.transform.translation.y = sin(self.right_wheel_pos) * 0.2  # Just an example, update accordingly
+        transform.transform.translation.x = self.x
+        transform.transform.translation.y = self.y
         transform.transform.translation.z = 0.0
         transform.transform.rotation.x = 0.0
         transform.transform.rotation.y = 0.0
-        transform.transform.rotation.z = 0.0
-        transform.transform.rotation.w = 1.0
+        transform.transform.rotation.z = sin(self.th / 2.0)
+        transform.transform.rotation.w = cos(self.th / 2.0)
 
         self.broadcaster.sendTransform(transform)
+        
+        #print(f"x: {self.x:.2f}[m], y: {self.y:.2f}[m], th: {deg:.2f}[deg]")
 
 def main(args=None):
     rclpy.init(args=args)

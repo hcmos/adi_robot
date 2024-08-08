@@ -11,7 +11,7 @@ from launch_ros.actions import Node
 
 # share_dir_path = os.path.join(get_package_share_directory('urdf'))
 
-urdf_path = os.path.join("/home/auv/_urdf_ws/src/urdf_test/urdf/agv3.urdf")
+urdf_path = os.path.join("/home/auv/_urdf2_ws/src/urdf_test/urdf/agv3.urdf")
 
 
 # Pose where we want to spawn the robot
