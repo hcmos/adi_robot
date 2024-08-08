@@ -1,0 +1,21 @@
+diff_driver_node:
+  ros__parameters:
+    tread : 0.5
+    wheel_radius : 0.2
+
+
+teleop_twist_joy_node:
+  ros__parameters:
+    axis_linear:
+      x: 1
+      y: 0
+    scale_linear:
+      x: 0.5
+      y: 0.0
+
+    axis_angular:
+      yaw: 3
+    scale_angular:
+      yaw: 0.5
+
+    enable_button: 4
