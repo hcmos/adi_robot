@@ -15,6 +15,8 @@ class DiffDriver(Node):
 
         self.declare_parameter("tread", 0.0)
         self.declare_parameter("wheel_radius", 0.0)
+        self.declare_parameter("reverse_l_flag", False)
+        self.declare_parameter("reverse_r_flag", False)
 
         self.get_logger().info("ロボットの速度指令値をモータ速度にしてtmclに送ります．")
 
@@ -23,6 +25,9 @@ class DiffDriver(Node):
         tread = self.get_parameter("tread").value
         wheel_radius = self.get_parameter("wheel_radius").value
 
+        is_rev_l = self.get_parameter("reverse_l_flag").value
+        is_rev_r = self.get_parameter("reverse_r_flag").value
+
 
         # モータの速度指令値の算出
         vel_l = (-tread*msg.angular.z + 2.0*msg.linear.x) / (2.0*wheel_radius)
@@ -30,9 +35,9 @@ class DiffDriver(Node):
 
         # 出版
         tx = Twist()
-        tx.linear.x = self.get_rpm(vel_l)
+        tx.linear.x = self.get_rpm((-1 if is_rev_l else 1)*vel_l)
         self.publisher_l.publish(tx)
-        tx.linear.x = self.get_rpm(vel_r)
+        tx.linear.x = self.get_rpm((-1 if is_rev_r else 1)*vel_r)
         self.publisher_r.publish(tx)
 
         return

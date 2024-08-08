@@ -1,7 +1,9 @@
 diff_driver_node:
   ros__parameters:
-    tread : 0.5
-    wheel_radius : 0.2
+    tread : 0.517
+    wheel_radius : 0.1
+    reverse_l_flag : true
+    reverse_r_flag : false
 
 
 teleop_twist_joy_node:
