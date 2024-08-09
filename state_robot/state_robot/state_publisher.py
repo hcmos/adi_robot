@@ -60,12 +60,11 @@ class StatePublisher(Node):
         self.timer = self.create_timer(0.1, self.update_odometry)
 
     def tmc_info_0_callback(self, msg):
-        self.left_wheel_pos = msg.position * pi / 180 # deg to rad
-        self.left_wheel_vel = msg.velocity 
-
+        self.left_wheel_pos = -1 * msg.position * pi / 180 # deg to rad
+        self.left_wheel_vel = -1 * msg.velocity/20 * 2 * pi/60 * 0.1
     def tmc_info_1_callback(self, msg):
         self.right_wheel_pos = msg.position * pi / 180 # deg to rad
-        self.right_wheel_vel = msg.velocity # 
+        self.right_wheel_vel = msg.velocity/20 * 2 * pi/60 * 0.1
 
     def imu_callback(self, msg):
         self.imu_orientation = msg.orientation
@@ -74,8 +73,12 @@ class StatePublisher(Node):
         dt = 0.1  # assuming a control loop running at 10Hz
 
         # Calculate linear and angular velocities
-        linear_vel = (self.right_wheel_vel + self.left_wheel_vel) / 2.0
+        linear_vel = (self.right_wheel_vel + self.left_wheel_vel) / self.wheel_separation
         angular_vel = (self.right_wheel_vel - self.left_wheel_vel) / self.wheel_separation
+
+        # left_wheel_vel = (linear_vel - angular_vel * self.wheel_separation / 2.0) / self.wheel_radius
+        # right_wheel_vel = (linear_vel + angular_vel * self.wheel_separation / 2.0) / self.wheel_radius
+
 
         # Update robot's position
         dx = linear_vel * cos(self.th) * dt
@@ -127,16 +130,21 @@ class StatePublisher(Node):
         if self.imu_orientation is not None:
             imu_transform = TransformStamped()
             imu_transform.header.stamp = self.get_clock().now().to_msg()
+            # imu_transform.header.frame_id = 'base_link'#動く
             imu_transform.header.frame_id = 'base_link'
             imu_transform.child_frame_id = 'imu_link'
 
             imu_transform.transform.translation.x = 0.0
             imu_transform.transform.translation.y = 0.0
-            imu_transform.transform.translation.z = 0.3  # Assuming IMU is placed 0.3m above base_link
-            imu_transform.transform.rotation = self.imu_orientation
+            imu_transform.transform.translation.z = 0.3  # Assuming IMU is placed 0.1m above base_link
+            #imu_transform.transform.rotation = 0#self.imu_orientation
+
+            transform.transform.rotation.x = 0.0
+            transform.transform.rotation.y = 0.0
+            transform.transform.rotation.z = 0.0
+            transform.transform.rotation.w = 1.0
 
             self.broadcaster.sendTransform(imu_transform)
-
         # Print calculated linear and angular velocities
         self.get_logger().info(f'Linear Velocity: {linear_vel:.2f} m/s, Angular Velocity: {angular_vel:.2f} rad/s')
 

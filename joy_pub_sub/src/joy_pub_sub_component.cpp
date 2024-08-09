@@ -57,27 +57,9 @@ void MinimalSubscriber::_topic_callback(const sensor_msgs::msg::Joy::SharedPtr m
     }
 
     else if(msg->axes[6] > 0){//left
-      // diff_twist_r_msg.linear.x = 300.0;
-      // diff_twist_l_msg.linear.x = 150.0;
-
-      // viz_msg.linear.x = 1;
-      // viz_msg.linear.y = 0.5;
-      // viz_msg.linear.z = 0;
-      // viz_msg.angular.x = 0;
-      // viz_msg.angular.y = 0;
-      // viz_msg.angular.z = -0.5;
     }
 
     else if(msg->axes[6] < 0){//right
-      // diff_twist_r_msg.linear.x = 150.0;
-      // diff_twist_l_msg.linear.x = 300.0;
-
-      // viz_msg.linear.x = 0.5;
-      // viz_msg.linear.y = 1.0;
-      // viz_msg.linear.z = 0;
-      // viz_msg.angular.x = 0;
-      // viz_msg.angular.y = 0;
-      // viz_msg.angular.z = 0.5;
     }
 
     else if(msg->buttons[1] == 1){//CW
@@ -89,7 +71,7 @@ void MinimalSubscriber::_topic_callback(const sensor_msgs::msg::Joy::SharedPtr m
       viz_msg.linear.z = 0;
       viz_msg.angular.x = 0;
       viz_msg.angular.y = 0;
-      viz_msg.angular.z = 30;
+      viz_msg.angular.z = 1;
 
       float i = 0, v = 0, w = 0;
       i = rpm_to_rad(150);
@@ -107,7 +89,7 @@ void MinimalSubscriber::_topic_callback(const sensor_msgs::msg::Joy::SharedPtr m
       viz_msg.linear.z = 0;
       viz_msg.angular.x = 0;
       viz_msg.angular.y = 0;
-      viz_msg.angular.z = -30;
+      viz_msg.angular.z = -1;
 
       float i = 0, v = 0, w = 0;
       i = rpm_to_rad(150);
@@ -138,8 +120,6 @@ void MinimalSubscriber::_topic_callback(const sensor_msgs::msg::Joy::SharedPtr m
 
     }
 
-      //printf("[cmd_vel] m/s motor0: %f[m/s], motor1: %f[m/s]\n", diff_twist_r_msg.linear.x, diff_twist_l_msg.linear.x);
-
 }
 
 MinimalSubscriber::MinimalSubscriber(
@@ -147,7 +127,7 @@ MinimalSubscriber::MinimalSubscriber(
 ): MinimalSubscriber("",options){}
 
 MinimalSubscriber::MinimalSubscriber(
-  const std::string& name_space,
+  const std::string& name_space, 
   const rclcpp::NodeOptions& options
 ): Node("minimal_subscriber_test", name_space, options){
 
