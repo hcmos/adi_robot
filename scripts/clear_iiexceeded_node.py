@@ -6,7 +6,7 @@ class Clear(Node):
     def __init__(self):
         super().__init__("clear_iit_node")
 
-        self.cli = self.create_client(TmcCustomCmd, 'tmcl_custom_cmd')
+        self.cli = self.create_client(TmcCustomCmd, '/tmcm1/tmcl_custom_cmd')
 
         tx = TmcCustomCmd.Request()
         tx.instruction = "SAP"
